@@ -1,61 +1,86 @@
 @extends('layouts.app')
+
 @section('content')
-    <div class="main-content-wrap">
-        <div class="flex items-center flex-wrap justify-between gap20 mb-27">
-            <h3>Orders (Diterima & Lunas)</h3>
+    <div class="space-y-6">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900">Orders Selesai (Diterima & Lunas)</h1>
+            <p class="mt-1 text-sm text-gray-600">Lihat dan ekspor riwayat semua pesanan yang telah selesai dan lunas.</p>
         </div>
 
-        <div class="wg-box">
-            <div class="wg-table table-all-user">
-                <div class="table-responsive">
-                    <div class="mb-3">
-                        <a href="{{ route('orders.export.pdf') }}" class="btn btn-danger me-2">Export PDF</a>
-                        <a href="{{ route('orders.export.excel') }}" class="btn btn-success">Export Excel</a>
-                    </div>
-                    <table class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th>No Faktur</th>
-                                <th>Nama</th>
-                                <th>Metode</th>
-                                <th>Status</th>
-                                <th>Tanggal</th>
-                                <th>Total</th>
-                                <th>Faktur</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($orders as $order)
-                                @if ($order->status === 'diterima' && $order->status_bayar === 'lunas')
-                                    <tr>
-                                        <td>{{ $order->no }}</td>
-                                        <td>{{ $order->nama_customer }}</td>
-                                        <td class="text-capitalize">{{ $order->metode }}</td>
-                                        <td>{{ $order->status }} & {{ $order->status_bayar }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($order->created_at)->format('d-m-Y') }}</td>
-                                        <td>Rp {{ number_format($order->total, 0, ',', '.') }}</td>
-                                        <td>
-                                            <a href="{{ asset('storage/pdf/' . $order->file_faktur) }}"
-                                                class="text-decoration-underline" target="_blank">
-                                                {{ $order->file_faktur }}
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endif
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="text-center">Belum ada order diterima & lunas.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <h2 class="text-lg font-semibold text-gray-800">Riwayat Pesanan</h2>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('orders.export.pdf') }}"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold text-sm rounded-lg hover:bg-red-700 transition-colors">
+                        <i class="icon-file-text"></i>
+                        <span>Export PDF</span>
+                    </a>
+                    <a href="{{ route('orders.export.excel') }}"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold text-sm rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="icon-grid"></i>
+                        <span>Export Excel</span>
+                    </a>
                 </div>
             </div>
 
-            <div class="divider"></div>
-            <div class="flex items-center justify-between flex-wrap gap10 wgp-pagination">
-                {{ $orders->links() }}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-600">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">No. Faktur</th>
+                            <th scope="col" class="px-6 py-3">Customer</th>
+                            <th scope="col" class="px-6 py-3">Tanggal</th>
+                            <th scope="col" class="px-6 py-3">Total</th>
+                            <th scope="col" class="px-6 py-3">Status</th>
+                            <th scope="col" class="px-6 py-3">File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($orders as $order)
+                            {{-- Asumsi controller sudah memfilter, jika tidak, tambahkan if di sini --}}
+                            {{-- @if ($order->status === 'diterima' && $order->status_bayar === 'lunas') --}}
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-6 py-4 font-medium text-gray-900">{{ $order->no }}</td>
+                                <td class="px-6 py-4">{{ $order->nama_customer }}</td>
+                                <td class="px-6 py-4">
+                                    {{ \Carbon\Carbon::parse($order->created_at)->isoFormat('DD MMM YYYY') }}</td>
+                                <td class="px-6 py-4 font-medium">Rp{{ number_format($order->total, 0, ',', '.') }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-1.5">
+                                        <span
+                                            class="inline-flex items-center w-fit px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Diterima</span>
+                                        <span
+                                            class="inline-flex items-center w-fit px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">Lunas</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a href="{{ asset('storage/pdf/' . $order->file_faktur) }}"
+                                        class="font-medium text-blue-600 hover:underline" target="_blank">
+                                        Lihat Faktur
+                                    </a>
+                                </td>
+                            </tr>
+                            {{-- @endif --}}
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-10 text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <i class="icon-archive text-4xl mb-2"></i>
+                                        <span>Belum ada data pesanan yang selesai.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
+
+            @if ($orders->hasPages())
+                <div class="mt-6">
+                    {{ $orders->links() }}
+                </div>
+            @endif
         </div>
     </div>
 @endsection

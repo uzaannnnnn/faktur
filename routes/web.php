@@ -52,7 +52,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/users', [UserController::class, 'index'])->name('users');
     Route::get('/admin/add-user', [UserController::class, 'create'])->name('users.create');
     Route::post('/admin/addUser', [UserController::class, 'store'])->name('users.store');
-    Route::put('/admin/updateObat', [ObatController::class, 'update'])->name('obats.update');
+
     Route::post('/users/tambah-sales', [UserController::class, 'tambahSales'])->name('users.tambahSales');
     Route::put('/users/aktifkan/{id}', [UserController::class, 'aktifkan'])->name('users.aktifkan');
 });
@@ -75,6 +75,7 @@ Route::middleware(['auth', 'role:gudang'])->group(function () {
     Route::get('/gudang/dashboard', [OrderController::class, 'gudangIndex'])->name('gudang.orders');
     Route::post('/gudang/{order}/kirim', [OrderController::class, 'kirimOrder'])->name('gudang.kirim');
     Route::post('/gudang/returns/{id}/done', [OrderController::class, 'markReturnDone'])->name('gudang.return.done');
+    Route::put('/gudang/updateObat', [ObatController::class, 'update'])->name('obats.update');
 });
 
 Route::middleware(['auth', 'role:fakturis'])->group(function () {

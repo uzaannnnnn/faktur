@@ -2,95 +2,212 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Nota Return - {{ $order->no }}</title>
     <style>
         body {
-            font-family: sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .invoice-box {
+            width: 100%;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .header {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .header td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+
+        .header .logo {
+            width: 150px;
+        }
+
+        .header .invoice-title {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .details {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .details td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+
+        .details .billed-to {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .section-title {
+            font-weight: bold;
             font-size: 14px;
-        }
-
-        h2 {
-            text-align: center;
+            margin-top: 30px;
             margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
         }
 
-        table {
+        .item-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        th,
-        td {
-            border: 1px solid #000;
-            padding: 8px;
             text-align: left;
         }
 
-        .no-border td {
-            border: none;
-            padding: 4px 8px;
+        .item-table thead th {
+            background-color: #f2f2f2;
+            border-bottom: 2px solid #ddd;
+            padding: 10px 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 11px;
+            color: #555;
         }
 
-        .total {
+        .item-table tbody td {
+            border-bottom: 1px solid #ddd;
+            padding: 12px 8px;
+        }
+
+        .item-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .item-table .numeric {
             text-align: right;
-            margin-top: 10px;
+        }
+
+        .totals-table {
+            width: 40%;
+            float: right;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            padding: 8px;
+        }
+
+        .totals-table .label {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .totals-table .grand-total {
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            border-top: 2px solid #333;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0px;
+            left: 0px;
+            right: 0px;
+            height: 50px;
+            font-size: 11px;
+            color: #777;
+            text-align: center;
+            line-height: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
         }
     </style>
 </head>
 
 <body>
-    <h2>Nota Return</h2>
+    <div class="footer">
+        Terima kasih atas kerja sama Anda.<br>
+        Dokumen ini dicetak oleh sistem dan sah tanpa tanda tangan.
+    </div>
 
-    <table class="no-border">
-        <tr>
-            <td><strong>No Faktur</strong></td>
-            <td>{{ $order->no }}</td>
-        </tr>
-        <tr>
-            <td><strong>Customer</strong></td>
-            <td>{{ $order->nama_customer }}</td>
-        </tr>
-        <tr>
-            <td><strong>Tanggal Return</strong></td>
-            <td>{{ \Carbon\Carbon::now()->format('d-m-Y') }}</td>
-        </tr>
-        <tr>
-            <td><strong>Alasan Return</strong></td>
-            <td>{{ $order->alasan_return }}</td>
-        </tr>
-    </table>
-
-    <h3 style="margin-top: 30px;">Detail Barang Diretur:</h3>
-
-    <table>
-        <thead>
+    <main class="invoice-box">
+        <table class="header">
             <tr>
-                <th>No</th>
-                <th>Nama Obat</th>
-                <th>Harga</th>
-                <th>Qty</th>
-                <th>Subtotal</th>
+                <td>
+                    <h3 style="font-weight: bold; margin:0;">PHARMACY</h3>
+                    <div style="font-size:11px;">Jalan Perusahaan No. 123, Bandung, Indonesia<br>pharmacy@company.com |
+                        (021)
+                        123-4567</div>
+                </td>
+                <td class="invoice-title" style="color: #d9534f;">
+                    NOTA RETURN
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach ($order->pesanan as $i => $item)
-                @php $obat = App\Models\Obat::find($item['id']); @endphp
+        </table>
+
+        <table class="details">
+            <tr>
+                <td style="width: 50%;">
+                    <div class="billed-to">DETAIL CUSTOMER:</div>
+                    <strong>{{ $order->nama_customer }}</strong><br>
+                    {{ $order->customer->alamat ?? 'Alamat tidak tersedia' }}
+                </td>
+                <td style="width: 50%; text-align: right;">
+                    <strong>Referensi Faktur No:</strong> {{ $order->no }}<br>
+                    <strong>Tanggal Return:</strong> {{ \Carbon\Carbon::now()->isoFormat('DD MMMM YYYY') }}<br>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="padding-top: 15px;">
+                    <strong style="font-weight: bold;">Alasan Return:</strong><br>
+                    <div style="font-size: 12px;">{{ $order->alasan_return ?? 'Tidak ada alasan yang diberikan.' }}
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="section-title">Detail Barang Diretur:</div>
+
+        <table class="item-table">
+            <thead>
                 <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>{{ $obat->nama_obat }}</td>
-                    <td>Rp {{ number_format($item['harga'], 0, ',', '.') }}</td>
-                    <td>{{ $item['quantity'] }}</td>
-                    <td>Rp {{ number_format($item['harga'] * $item['quantity'], 0, ',', '.') }}</td>
+                    <th style="width: 5%;">No.</th>
+                    <th>Nama Obat</th>
+                    <th class="numeric" style="width: 20%;">Harga Satuan</th>
+                    <th class="numeric" style="width: 10%;">Qty</th>
+                    <th class="numeric" style="width: 20%;">Subtotal</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach ($order->pesanan as $i => $item)
+                    @php $obat = App\Models\Obat::find($item['id']); @endphp
+                    <tr>
+                        <td>{{ $i + 1 }}</td>
+                        <td>
+                            <strong style="font-weight: bold;">{{ $obat->nama_obat ?? 'Obat tidak ditemukan' }}</strong>
+                            <div style="font-size:10px; color:#666;">No. Batch: {{ $obat->no_batch ?? '-' }}</div>
+                        </td>
+                        <td class="numeric">Rp{{ number_format($item['harga'], 0, ',', '.') }}</td>
+                        <td class="numeric">{{ $item['quantity'] }}</td>
+                        <td class="numeric">Rp{{ number_format($item['harga'] * $item['quantity'], 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
 
-    <h3 class="total">Total Return: Rp {{ number_format($order->total, 0, ',', '.') }}</h3>
-
-    <p style="margin-top: 20px;"><strong>Status:</strong> Return</p>
+        <table class="totals-table">
+            <tr>
+                <td class="label">Total Nilai Return</td>
+                <td class="numeric grand-total">Rp{{ number_format($order->total, 0, ',', '.') }}</td>
+            </tr>
+        </table>
+    </main>
 </body>
 
 </html>

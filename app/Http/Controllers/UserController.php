@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Obat;
 use App\Models\User;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -12,12 +13,31 @@ class UserController extends Controller
 {
     public function dashboard()
     {
-        $stokMinimum = Obat::where('quantity', '<', 10)->get();
-        $hampirExpired = Obat::whereDate('ed', '<=', Carbon::now()->addDays(10))
-            ->where('status', '!=', 'expired')
+        $totalObat = Obat::where('status', 'tersedia')->count();
+        $totalFaktur = Order::count();
+        $totalOrdersBulanIni = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+        $totalUsers = User::count();
+
+
+        $stokMinimum = Obat::where('quantity', '<', 15)->where('quantity', '>', 0)->get();
+
+
+        $hampirExpired = Obat::where('ed', '<=', now()->addDays(60))
+            ->where('ed', '>', now())
+            ->where('status', 'tersedia')
             ->get();
 
-        return view('admin.dashboard', compact('stokMinimum', 'hampirExpired'));
+
+        return view('admin.dashboard', compact(
+            'totalObat',
+            'totalFaktur',
+            'totalOrdersBulanIni',
+            'totalUsers',
+            'stokMinimum',
+            'hampirExpired'
+        ));
     }
 
     public function index()

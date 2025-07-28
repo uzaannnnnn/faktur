@@ -1,135 +1,168 @@
 @extends('layouts.app')
+
 @section('content')
-    <div class="main-content-wrap">
-        <div class="flex items-center flex-wrap justify-between mb-27">
-            <h3>Buat Faktur</h3>
+    <div x-data="fakturForm()" x-init="$watch('pesanan', () => calculateTotal());
+    $watch('searchQuery', () => filterTable());">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-semibold text-gray-900">Buat Faktur Baru</h1>
         </div>
 
-        <form class="form-add-faktur" id="fakturForm" method="POST" action="{{ route('fakturis.store') }}"
-            enctype="multipart/form-data">
+        <form id="fakturForm" method="POST" action="{{ route('fakturis.store') }}" enctype="multipart/form-data">
             @csrf
-            <div class="wg-box">
-                {{-- Nama Customer --}}
-                <fieldset class="name ps-3" style="width: 30%">
-                    <div class="body-title mb-10">Nama Customer<span class="tf-color-1">*</span></div>
-                    <div class="select">
-                        <select name="id_customer" id="id_customer" required>
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-md space-y-8">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="id_customer" class="block text-sm font-medium text-gray-700 mb-1">Nama Customer <span
+                                class="text-red-500">*</span></label>
+                        <select name="id_customer" id="id_customer"
+                            class="w-full max-w-sm p-2 rounded-lg border-gray-300 shadow-md focus:border-blue-500 focus:ring-blue-500"
+                            required>
                             <option value="">Pilih Customer</option>
                             @foreach ($customers as $customer)
                                 <option value="{{ $customer->id }}">{{ $customer->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                </fieldset>
-
-                {{-- Tabel Obat --}}
-                <div class="d-flex justify-content-end mb-3">
-                    <div style="width: 40%;">
-                        <input type="text" class="form-control" id="searchInput"
-                            placeholder="Cari nama obat atau no batch...">
-                    </div>
-                </div>
-
-                <div class="table-responsive mt-4">
-                    <table class="table table-striped table-bordered" id="obatTable">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nama Obat</th>
-                                <th>No Batch</th>
-                                <th>Kemasan</th>
-                                <th>Harga</th>
-                                <th>Expired Date</th>
-                                <th>Stock</th>
-                                <th>Quantity</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($obats as $index => $obat)
-                                <tr>
-                                    <td>{{ $index + 1 }}</td>
-                                    <td>{{ $obat->nama_obat }}</td>
-                                    <td>{{ $obat->no_batch }}</td>
-                                    <td>{{ $obat->kemasan }}</td>
-                                    <td>Rp {{ number_format($obat->harga, 0, ',', '.') }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($obat->ed)->format('d-m-Y') }}</td>
-                                    <td>{{ $obat->quantity }}</td>
-                                    <td>
-                                        <input type="hidden" name="pesanan[{{ $index }}][id]"
-                                            value="{{ $obat->id }}">
-                                        <input type="number" class="border border-secondary quantity-input"
-                                            name="pesanan[{{ $index }}][quantity]" min="0"
-                                            max="{{ $obat->quantity }}" value="0" data-harga="{{ $obat->harga }}">
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- Metode Pembayaran --}}
-                <fieldset class="name ps-3 mt-5" style="width: 30%">
-                    <div class="body-title mb-10">Metode Pembayaran<span class="tf-color-1">*</span></div>
-                    <div class="select">
-                        <select name="metode" id="metode" required>
+                    <div>
+                        <label for="metode" class="block text-sm font-medium text-gray-700 mb-1">Metode Pembayaran <span
+                                class="text-red-500">*</span></label>
+                        <select name="metode" id="metode"
+                            class="w-full max-w-sm p-2 rounded-lg border-gray-300 shadow-md focus:border-blue-500 focus:ring-blue-500"
+                            required>
                             <option value="">Pilih Metode</option>
                             <option value="tunai">Tunai</option>
                             <option value="termin">Termin</option>
                         </select>
                     </div>
-                </fieldset>
+                </div>
 
-                {{-- Total --}}
-                <div class="ps-3 mt-3 fs-5" id="totalDisplay">Total: Rp 0</div>
+                <div class="border-t border-gray-200 pt-8">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Pilih Obat</h3>
+                        <div class="relative w-full sm:w-auto sm:max-w-xs">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="icon-search text-gray-400"></i>
+                            </div>
+                            <input type="text" x-model="searchQuery" placeholder="Cari obat atau no. batch..."
+                                class="w-full pl-10 pr-4 py-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                    </div>
 
-                {{-- Submit --}}
-                <div class="cols justify-end pe-5 mt-4">
-                    <button type="submit" class="tf-button">Buat!</button>
+                    <div class="mt-4 flow-root">
+                        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                <table class="min-w-full divide-y divide-gray-300">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col"
+                                                class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-3">
+                                                Nama Obat</th>
+                                            <th scope="col"
+                                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Batch</th>
+                                            <th scope="col"
+                                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Harga</th>
+                                            <th scope="col"
+                                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">ED</th>
+                                            <th scope="col"
+                                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Stok</th>
+                                            <th scope="col"
+                                                class="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">Quantity
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white" id="obatTableBody">
+                                        @foreach ($obats as $obat)
+                                            <tr class="obat-row" data-nama="{{ strtolower($obat->nama_obat) }}"
+                                                data-batch="{{ strtolower($obat->no_batch) }}">
+                                                <td
+                                                    class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-3">
+                                                    {{ $obat->nama_obat }}</td>
+                                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                                    {{ $obat->no_batch }}</td>
+                                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">Rp
+                                                    {{ number_format($obat->harga, 0, ',', '.') }}</td>
+                                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                                    {{ \Carbon\Carbon::parse($obat->ed)->isoFormat('MMM YYYY') }}</td>
+                                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                                    {{ $obat->quantity }} {{ $obat->kemasan }}</td>
+                                                <td class="whitespace-nowrap px-3 py-4 text-sm text-center text-gray-500">
+                                                    <input type="number" x-model.number="pesanan[{{ $obat->id }}]"
+                                                        min="0" max="{{ $obat->quantity }}"
+                                                        class="w-24 text-center rounded-md border-gray-300 shadow-md focus:border-blue-500 focus:ring-blue-500">
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <template x-for="(quantity, id) in pesanan" :key="id">
+                    <div x-show="quantity > 0">
+                        <input type="hidden" :name="`pesanan[${id}][id]`" :value="id">
+                        <input type="hidden" :name="`pesanan[${id}][quantity]`" :value="quantity">
+                    </div>
+                </template>
+
+                <div class="border-t border-gray-200 pt-6 flex flex-col items-end gap-4">
+                    <div class="text-right">
+                        <span class="text-sm text-gray-500">Total Belanja</span>
+                        <p class="text-2xl font-bold text-gray-900" x-text="formatCurrency(total)"></p>
+                    </div>
+                    <button type="submit"
+                        class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-semibold text-sm rounded-lg hover:bg-blue-700 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="icon-save"></i>
+                        <span>Buat & Simpan Faktur</span>
+                    </button>
                 </div>
             </div>
         </form>
     </div>
 
-    {{-- Script total --}}
     <script>
-        document.getElementById('searchInput').addEventListener('input', function() {
-            const filter = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#obatTable tbody tr');
+        function fakturForm() {
+            return {
+                searchQuery: '',
+                pesanan: {},
+                total: 0,
+                obats: {!! $obats->mapWithKeys(fn($obat) => [$obat->id => ['harga' => $obat->harga]])->toJson() !!},
 
-            rows.forEach(row => {
-                const namaObat = row.cells[1].textContent.toLowerCase(); // kolom "Nama Obat"
-                const noBatch = row.cells[2].textContent.toLowerCase(); // kolom "No Batch"
+                calculateTotal() {
+                    let newTotal = 0;
+                    for (const id in this.pesanan) {
+                        const quantity = parseInt(this.pesanan[id], 10) || 0;
+                        if (quantity > 0 && this.obats[id]) {
+                            newTotal += quantity * this.obats[id].harga;
+                        }
+                    }
+                    this.total = newTotal;
+                },
 
-                if (namaObat.includes(filter) || noBatch.includes(filter)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
+                formatCurrency(value) {
+                    return new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(value);
+                },
+
+                filterTable() {
+                    const query = this.searchQuery.toLowerCase();
+                    document.querySelectorAll('.obat-row').forEach(row => {
+                        const nama = row.dataset.nama;
+                        const batch = row.dataset.batch;
+                        if (nama.includes(query) || batch.includes(query)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
                 }
-            });
-        });
-
-        document.querySelectorAll('.quantity-input').forEach(input => {
-            input.addEventListener('input', updateTotal);
-        });
-
-        document.getElementById('metode').addEventListener('change', function() {
-            const metode = this.value;
-            const buktiField = document.getElementById('buktiBayarField');
-            if (metode === 'termin') {
-                buktiField.style.display = 'none';
-            } else {
-                buktiField.style.display = 'block';
             }
-        });
-
-        function updateTotal() {
-            let total = 0;
-            document.querySelectorAll('.quantity-input').forEach(input => {
-                const qty = parseInt(input.value) || 0;
-                const harga = parseInt(input.dataset.harga) || 0;
-                total += qty * harga;
-            });
-            document.getElementById('totalDisplay').textContent = 'Total: Rp ' + total.toLocaleString('id-ID');
         }
     </script>
 @endsection
